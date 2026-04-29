@@ -12,6 +12,18 @@ KERN_SPALTEN = ['standort', 'monat', 'gemessene_fahrzeuge', 'verstoesse',
                 'gueltige_verstoesse', 'verwarnungen', 'bussgelder',
                 'max_geschwindigkeit', 'einnahmen', 'jahr']
 
+MAX_SPEED = {
+    "Laube": 30,
+    "Steinstr": 30,
+    "Gartenstr": 30,
+    "Mainaustr": 50,
+    "Loh": 30,
+    "Moschee": 30,
+    "Casino": 50,
+    "Europabruecke": 60
+}
+
+
 dfs = []
 for year in [2018, 2019, 2020, 2021, 2022, 2023]:
     pfad = os.path.join(ordner, f"{year}.csv")
@@ -29,6 +41,11 @@ for year in [2018, 2019, 2020, 2021, 2022, 2023]:
 
 df_all = pd.concat(dfs, ignore_index=True)
 df_all['verstoessquote'] = df_all['gueltige_verstoesse'] / df_all['gemessene_fahrzeuge'] * 100
+
+df_all['speed_limit'] = df_all['standort'].map(MAX_SPEED)
+df_speed = df_all.dropna(subset=['speed_limit', 'verstoessquote']).copy()
+df_all['ueberschreitung'] = df_all['max_geschwindigkeit'] - df_all['speed_limit']
+df_all['avg_fine'] = df_all['einnahmen'] / df_all['gueltige_verstoesse']
 
 # ── Jahresaggregation ─────────────────────────────────────────────────────────
 trend = df_all.groupby('jahr').agg(
@@ -109,3 +126,82 @@ plt.tight_layout()
 plt.savefig('plot2_trendanalyse.png', dpi=150, bbox_inches='tight')
 plt.show()
 print("Gespeichert als plot2_trendanalyse.png ✓")
+
+# plot 3: Verteilung der Verstoßquote - Wie ist die Verstoßquote über alle Standorte und Monate verteilt?
+data = df_all['verstoessquote'].dropna()
+
+plt.figure(figsize=(7,5))
+plt.hist(data, bins=20, color='steelblue', edgecolor='white', alpha=0.7)
+
+plt.title('Verteilung der Verstoßquote', fontweight='bold')
+plt.xlabel('Verstoßquote (%)')
+plt.ylabel('Häufigkeit')
+
+plt.grid(axis='y', linestyle='--', alpha=0.5)
+plt.tight_layout()
+plt.savefig('plot3_verstoessquote_verteilung.png', dpi=150, bbox_inches='tight')
+plt.show()
+
+# plot 4: Verstoßquote vs durchschnittliches Bußgeld - Gibt es einen Zusammenhang zwischen der Verstoßquote und dem durchschnittlichen Bußgeld pro Verstoß?
+plt.figure(figsize=(7,5))
+
+df_clean = df_all[['verstoessquote', 'avg_fine']].dropna()
+x = df_clean['verstoessquote']
+y = df_clean['avg_fine']
+
+z = np.polyfit(x, y, 1)
+p = np.poly1d(z)
+
+plt.scatter(x, y, alpha=0.4)
+
+# Regression
+z = np.polyfit(x, y, 1)
+p = np.poly1d(z)
+
+x_line = np.linspace(x.min(), x.max(), 100)
+plt.plot(x_line, p(x_line), linewidth=2)
+
+plt.title('Verstoßquote vs durchschnittliches Bußgeld', fontweight='bold')
+plt.xlabel('Verstoßquote (%)')
+plt.ylabel('Ø Bußgeld pro Verstoß (€)')
+plt.grid(linestyle='--', alpha=0.5)
+
+plt.tight_layout()
+plt.savefig('plot4_verstoessquote_avg_fine.png', dpi=150, bbox_inches='tight')
+plt.show()
+
+# plot 5: Einnahmen vs Verstöße - Wie hängen die Einnahmen mit der Anzahl der gültigen Verstöße zusammen? Gibt es einen linearen Zusammenhang?
+
+df_model = df_all[['gueltige_verstoesse', 'einnahmen']].dropna()
+
+x = df_model['gueltige_verstoesse']
+y = df_model['einnahmen']
+
+# Regression
+z = np.polyfit(x, y, 1)
+p = np.poly1d(z)
+
+y_pred = p(x)
+
+# R²
+ss_res = np.sum((y - y_pred)**2)
+ss_tot = np.sum((y - np.mean(y))**2)
+r2 = 1 - (ss_res / ss_tot)
+
+print(f"R²: {r2:.3f}")
+
+# Plot
+plt.figure(figsize=(7,5))
+plt.scatter(x, y, alpha=0.4)
+
+x_line = np.linspace(x.min(), x.max(), 100)
+plt.plot(x_line, p(x_line), linewidth=2)
+
+plt.title(f'Einnahmen vs Verstöße (R² = {r2:.2f})', fontweight='bold')
+plt.xlabel('Gültige Verstöße')
+plt.ylabel('Einnahmen (€)')
+plt.grid(linestyle='--', alpha=0.5)
+
+plt.tight_layout()
+plt.savefig('plot5_einnahmen_vs_verstoesse.png', dpi=150, bbox_inches='tight')
+plt.show()
