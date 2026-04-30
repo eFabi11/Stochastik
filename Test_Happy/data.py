@@ -97,9 +97,9 @@ fig, axes = plt.subplots(1, 3, figsize=(18, 6))
 fig.suptitle('World Happiness Report – Erste Übersicht', fontsize=14, fontweight='bold')
 
 ax = axes[0]
-top10 = df[df['year'] == 2024].nsmallest(10, 'rank_in_year')
+top10 = df[df['year'] == 2025].nsmallest(10, 'rank_in_year')
 ax.barh(top10['country'][::-1], top10['happiness_score'][::-1], color='steelblue')
-ax.set_title('Top 10 glücklichste Länder (2024)', fontweight='bold')
+ax.set_title('Top 10 glücklichste Länder (2025)', fontweight='bold')
 ax.set_xlabel('Happiness Score')
 ax.set_xlim(6, 8)
 ax.spines['top'].set_visible(False)
@@ -121,11 +121,11 @@ ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 
 ax = axes[2]
-scores_2024 = df[df['year'] == 2024]['happiness_score'].dropna()
-ax.hist(scores_2024, bins=20, color='steelblue', edgecolor='white')
-ax.axvline(scores_2024.mean(), color='red', linestyle='--', linewidth=2,
-           label=f'Mittelwert: {scores_2024.mean():.2f}')
-ax.set_title('Verteilung Happiness Score (2024)', fontweight='bold')
+scores_2025 = df[df['year'] == 2025]['happiness_score'].dropna()
+ax.hist(scores_2025, bins=20, color='steelblue', edgecolor='white')
+ax.axvline(scores_2025.mean(), color='red', linestyle='--', linewidth=2,
+           label=f'Mittelwert: {scores_2025.mean():.2f}')
+ax.set_title('Verteilung Happiness Score (2025)', fontweight='bold')
 ax.set_xlabel('Happiness Score')
 ax.set_ylabel('Anzahl Länder')
 ax.legend()
@@ -140,7 +140,7 @@ plt.show()
 # PLOT 4-9: Korrelationen mit Residualplot
 # ═══════════════════════════════════════════════════════════════════════════════
 def plot_correlation(ax, df, y_column, y_label):
-    subset = df[df['year'] == 2024][['happiness_score', y_column]].dropna()
+    subset = df[df['year'] == 2025][['happiness_score', y_column]].dropna()
     x = subset['happiness_score']
     y = subset[y_column]
     correlation = x.corr(y)
@@ -150,7 +150,7 @@ def plot_correlation(ax, df, y_column, y_label):
     y_line = slope * x_line + intercept
     ax.scatter(x, y, alpha=0.6)
     ax.plot(x_line, y_line, color='red', linewidth=2, label='Regression')
-    ax.set_title(f'Happiness Score vs. {y_label} (2024)', fontweight='bold')
+    ax.set_title(f'Happiness Score vs. {y_label} (2025)', fontweight='bold')
     ax.set_xlabel('Happiness Score')
     ax.set_ylabel(y_label)
     ax.legend()
@@ -161,7 +161,7 @@ def plot_correlation(ax, df, y_column, y_label):
     ax.spines['right'].set_visible(False)
 
 fig, axes = plt.subplots(2, 3, figsize=(18, 10))
-fig.suptitle('World Happiness Report – Korrelationen (2024)', fontsize=14, fontweight='bold')
+fig.suptitle('World Happiness Report – Korrelationen (2025)', fontsize=14, fontweight='bold')
 
 plot_correlation(axes[0][0], df, 'explained_social_support', 'Social Support')
 plot_correlation(axes[0][1], df, 'explained_healthy_life_expectancy', 'Healthy Life Expectancy')
@@ -178,9 +178,9 @@ plt.show()
 # PLOT 10: Residualplot + QQ-Plot (Modellvalidierung)
 # ═══════════════════════════════════════════════════════════════════════════════
 fig, axes = plt.subplots(1, 2, figsize=(14, 6))
-fig.suptitle('Modellvalidierung: Happiness ~ GDP (2024)', fontsize=14, fontweight='bold')
+fig.suptitle('Modellvalidierung: Happiness ~ GDP (2025)', fontsize=14, fontweight='bold')
 
-subset = df[df['year'] == 2024][['happiness_score', 'explained_log_gdp_per_capita']].dropna()
+subset = df[df['year'] == 2025][['happiness_score', 'explained_log_gdp_per_capita']].dropna()
 x = subset['explained_log_gdp_per_capita']
 y = subset['happiness_score']
 slope, intercept, r_value, p_value, std_err = linregress(x, y)
@@ -217,14 +217,14 @@ plt.show()
 # PLOT 11: Multivariat – Scatter GDP × Happiness × Kontinent (Bubble)
 # ═══════════════════════════════════════════════════════════════════════════════
 fig, ax = plt.subplots(figsize=(12, 8))
-fig.suptitle('Multivariat: GDP × Happiness × Kontinent (2024)',
+fig.suptitle('Multivariat: GDP × Happiness ×Life Expectancy (2025)',
              fontsize=14, fontweight='bold')
 
-df_2024 = df[df['year'] == 2024].dropna(
+df_2025 = df[df['year'] == 2025].dropna(
     subset=['explained_log_gdp_per_capita', 'happiness_score',
             'explained_healthy_life_expectancy'])
 
-for kontinent, gruppe in df_2024.groupby('kontinent'):
+for kontinent, gruppe in df_2025.groupby('kontinent'):
     ax.scatter(
         gruppe['explained_log_gdp_per_capita'],
         gruppe['happiness_score'],
@@ -235,7 +235,7 @@ for kontinent, gruppe in df_2024.groupby('kontinent'):
         edgecolors='white', linewidth=0.5
     )
 
-ax.set_xlabel('Log GDP per Capita (erklärt)', fontsize=11)
+ax.set_xlabel('Log GDP per Capita', fontsize=11)
 ax.set_ylabel('Happiness Score', fontsize=11)
 ax.set_title('Punktgröße = Life Expectancy', fontsize=10, style='italic')
 ax.legend(title='Kontinent', bbox_to_anchor=(1.01, 1), loc='upper left')
@@ -251,7 +251,7 @@ plt.show()
 # PLOT 12: Heatmap Korrelationsmatrix
 # ═══════════════════════════════════════════════════════════════════════════════
 fig, ax = plt.subplots(figsize=(10, 8))
-fig.suptitle('Korrelationsmatrix aller Faktoren (2024)',
+fig.suptitle('Korrelationsmatrix aller Faktoren (2025)',
              fontsize=14, fontweight='bold')
 
 faktoren = {
@@ -264,7 +264,7 @@ faktoren = {
     'happiness_score': 'Happiness'
 }
 
-corr_df = df[df['year'] == 2024][list(faktoren.keys())].dropna()
+corr_df = df[df['year'] == 2025][list(faktoren.keys())].dropna()
 corr_df.columns = list(faktoren.values())
 corr_matrix = corr_df.corr()
 
@@ -290,7 +290,7 @@ plt.show()
 # PLOT 13: Zeitreihe mit Trendlinie nach Kontinent
 # ═══════════════════════════════════════════════════════════════════════════════
 fig, ax = plt.subplots(figsize=(12, 7))
-fig.suptitle('Happiness-Trend nach Kontinent (2011–2024)',
+fig.suptitle('Happiness-Trend nach Kontinent (2011–2025)',
              fontsize=14, fontweight='bold')
 
 kontinente = ['Europa', 'Asien', 'Afrika', 'Südamerika', 'Nordamerika']
