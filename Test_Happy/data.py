@@ -217,7 +217,7 @@ plt.show()
 # PLOT 11: Multivariat – Scatter GDP × Happiness × Kontinent (Bubble)
 # ═══════════════════════════════════════════════════════════════════════════════
 fig, ax = plt.subplots(figsize=(12, 8))
-fig.suptitle('Multivariat: GDP × Happiness ×Life Expectancy (2025)',
+fig.suptitle('Multivariat: GDP × Happiness × Life Expectancy (2025)',
              fontsize=14, fontweight='bold')
 
 df_2025 = df[df['year'] == 2025].dropna(
