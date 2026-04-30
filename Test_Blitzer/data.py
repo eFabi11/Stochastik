@@ -2,8 +2,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+from pathlib import Path
 
-ordner = "./Data"
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "Data"
 
 MONATE = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
           'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember']
@@ -26,8 +28,8 @@ MAX_SPEED = {
 
 dfs = []
 for year in [2018, 2019, 2020, 2021, 2022, 2023]:
-    pfad = os.path.join(ordner, f"{year}.csv")
-    df = pd.read_csv(pfad, sep=';', decimal=',', thousands='.', encoding='latin-1')
+    # Daten laden
+    df = pd.read_csv(DATA_DIR / f"{year}.csv", sep=';', decimal=',', thousands='.', encoding='latin-1') 
     df['jahr'] = year
     df['monat'] = df['monat'].str.strip().str.replace('Maerz', 'März', regex=False)
     df = df[~df['monat'].str.lower().eq('gesamt')]
