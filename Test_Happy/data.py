@@ -106,16 +106,37 @@ ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 
 ax = axes[1]
-laender = ['Finland', 'Germany', 'United States', 'Afghanistan', 'Ukraine']
-farben_ts = ['steelblue', 'orange', 'green', 'red', 'purple']
-for land, farbe in zip(laender, farben_ts):
+
+# Top 10 Länder aus 2025 holen
+top10_laender = df[df['year'] == 2025].nsmallest(10, 'rank_in_year')['country'].tolist()
+
+# Deutschland und Afghanistan ergänzen falls nicht drin
+extra = ['Germany', 'Afghanistan']
+alle_laender = top10_laender + [l for l in extra if l not in top10_laender]
+
+# Farben: Top 10 in Blautönen, Extra in Signalfarben
+cmap = plt.cm.tab20
+farben_map = {land: cmap(i / len(top10_laender)) for i, land in enumerate(top10_laender)}
+farben_map['Germany'] = 'orange'
+farben_map['Afghanistan'] = 'red'
+
+for land in alle_laender:
     d = df[df['country'] == land].sort_values('year')
-    ax.plot(d['year'], d['happiness_score'], marker='o', markersize=4,
-            label=land, color=farbe, linewidth=2)
-ax.set_title('Happiness Score über die Zeit', fontweight='bold')
+    if d.empty:
+        continue
+    linestyle = '--' if land in extra and land not in top10_laender else '-'
+    linewidth = 2.5 if land in ['Germany', 'Afghanistan'] else 1.5
+    ax.plot(d['year'], d['happiness_score'],
+            marker='o', markersize=3,
+            label=land,
+            color=farben_map.get(land, 'gray'),
+            linewidth=linewidth,
+            linestyle=linestyle)
+
+ax.set_title('Happiness Score der Top 10 Länder (2025)\n+ Deutschland & Afghanistan', fontweight='bold')
 ax.set_xlabel('Jahr')
 ax.set_ylabel('Happiness Score')
-ax.legend(fontsize=8)
+ax.legend(fontsize=7, ncol=2, loc='lower left')
 ax.grid(linestyle='--', alpha=0.4)
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
@@ -293,7 +314,12 @@ fig, ax = plt.subplots(figsize=(12, 7))
 fig.suptitle('Happiness-Trend nach Kontinent (2011–2025)',
              fontsize=14, fontweight='bold')
 
-kontinente = ['Europa', 'Asien', 'Afrika', 'Südamerika', 'Nordamerika']
+kontinente = ['Europa', 'Asien', 'Afrika', 'Südamerika', 'Nordamerika', 'Ozeanien', 'Mittelamerika']
+
+# Kurzer Check - füge das temporär vor Plot 6 ein
+for k in ['Ozeanien', 'Mittelamerika']:
+    d = df[df['kontinent'] == k].groupby('year')['happiness_score'].mean()
+    print(f"{k}: {len(d)} Jahre, Werte: {d.values[:3]}")
 
 for kontinent in kontinente:
     d = df[df['kontinent'] == kontinent].groupby('year')['happiness_score'].mean().reset_index()
