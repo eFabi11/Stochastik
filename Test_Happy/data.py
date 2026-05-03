@@ -5,6 +5,10 @@ import numpy as np
 from pathlib import Path
 from scipy.stats import linregress
 from scipy.stats import probplot
+import statsmodels.formula.api as smf
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, r2_score
+
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "Data"
@@ -255,45 +259,107 @@ plt.savefig(BASE_DIR / 'plot2_korrelationen.png', dpi=150, bbox_inches='tight')
 plt.show()
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# PLOT 10: Residualplot + QQ-Plot (Modellvalidierung)
+# PLOT 10: Extended Modellvalidierung
 # ═══════════════════════════════════════════════════════════════════════════════
-fig, axes = plt.subplots(1, 2, figsize=(14, 6))
-fig.suptitle('Modellvalidierung: Happiness Score ~ Log. BIP pro Kopf (2025)', fontsize=14, fontweight='bold')
 
-subset = df_clean[df_clean['year'] == 2025][['happiness_score', 'explained_log_gdp_per_capita']].dropna()
-x = subset['explained_log_gdp_per_capita']
-y = subset['happiness_score']
-slope, intercept, r_value, p_value, std_err = linregress(x, y)
-y_pred = slope * x + intercept
-residuen = y - y_pred
+def plot_validation(df, random=True):
+    
+    # 1. Split the dataset in train and test subsets
+    if random:
+        train_df, test_df = train_test_split(df_clean, test_size=0.33, random_state=42)
+    else:
+        train_df = df[(df['year'] >= 2019) & (df['year'] <= 2023)].dropna()
+        test_df  = df[(df['year'] >= 2024) & (df['year'] <= 2025)].dropna()
 
-# Residualplot
-ax = axes[0]
-ax.scatter(y_pred, residuen, alpha=0.6, color='steelblue')
-ax.axhline(0, color='red', linestyle='--', linewidth=2)
-ax.set_title('Residualplot', fontweight='bold')
-ax.set_xlabel('Vorhergesagter Happiness Score (ŷ)')
-ax.set_ylabel('Residuen (y - ŷ)')
-ax.text(0.05, 0.95, f'R² = {r_value**2:.3f}',
-        transform=ax.transAxes, verticalalignment='top',
-        bbox=dict(boxstyle='round', alpha=0.3))
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
+    # 2. Train the model
+    model = smf.ols(
+        '''
+        happiness_score ~
+        explained_log_gdp_per_capita +
+        explained_social_support +
+        explained_healthy_life_expectancy +
+        explained_freedom +
+        explained_corruption +
+        explained_generosity
+        ''',
+        data=train_df
+    ).fit()
 
-# QQ-Plot
-ax = axes[1]
-probplot(residuen, dist="norm", plot=ax)
-ax.set_title('QQ-Plot der Residuen', fontweight='bold')
-ax.set_xlabel('Theoretische Quantile (Normalverteilung)')
-ax.set_ylabel('Sample Quantile')
-ax.get_lines()[0].set(color='steelblue', alpha=0.6)
-ax.get_lines()[1].set(color='red', linewidth=2)
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
+    # 3. Predict the testdata
+    y_test = test_df['happiness_score']
+    y_pred = model.predict(test_df)
 
-plt.tight_layout()
-plt.savefig(BASE_DIR / 'plot3_validierung.png', dpi=150, bbox_inches='tight')
-plt.show()
+    # 4. Calculate the validation
+    rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+    r2 = r2_score(y_test, y_pred)
+
+    print(f'RMSE: {rmse:.3f}')
+    print(f'R²: {r2:.3f}')
+
+    # 5. Plot the results
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+    if random:
+        fig.suptitle('Validierung mit zufällig ausgewählten Trainingsdaten (2/3) und Testdaten (1/3)', fontsize=14, fontweight='bold')
+    else:
+        fig.suptitle('Validierung mit zeitlich ausgewählten Trainingsdaten (2019-2023) und Testdaten (2024-2025)', fontsize=14, fontweight='bold')
+
+    # ==================================================
+    # 1. Predicted vs Actual
+    # ==================================================
+    ax = axes[0]
+    ax.scatter(y_test, y_pred, alpha=0.7)
+    # perfekte Vorhersage-Linie
+    ax.plot(
+        [y_test.min(), y_test.max()],
+        [y_test.min(), y_test.max()],
+        'r--'
+    )
+    ax.set_xlabel('Tatsächlicher Happiness Score')
+    ax.set_ylabel('Vorhergesagter Happiness Score')
+    ax.set_title('Vorhergesagte vs. Tatsächliche Werte')
+    ax.text(
+        0.05, 0.95,
+        f'H ~ S + BIP + L + F + K + G\nR² = {r2:.3f}\nRMSE = {rmse:.3f}',
+        transform=ax.transAxes,
+        verticalalignment='top',
+        bbox=dict(boxstyle='round', alpha=0.3)
+    )
+
+    # ==================================================
+    # 2. Residual Plot
+    # ==================================================
+    residuals = y_test - y_pred
+    ax = axes[1]
+    ax.scatter(y_pred, residuals, alpha=0.7)
+    ax.axhline(0, color='red', linestyle='--')
+    ax.set_xlabel('Vorhergesagter Happiness Score (ŷ)')
+    ax.set_ylabel('Residuen (y - ŷ)')
+    ax.set_title('Residual Plot')
+
+    # ==================================================
+    # 3. QQ Plot
+    # ==================================================
+    ax = axes[2]
+    probplot(residuals, dist='norm', plot=ax)
+    ax.set_title('QQ Plot der Residuen')
+    ax.set_xlabel('Theoretische Quantile (Normalverteilung)')
+    ax.set_ylabel('Sample Quantile')
+    for ax in axes:
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+
+    plt.tight_layout()
+
+    plt.savefig(
+        BASE_DIR / f'plot3_extended_validierung_random={random}.png',
+        dpi=150,
+        bbox_inches='tight'
+    )
+    plt.show()
+
+
+plot_validation(df_clean, random=True)
+plot_validation(df_clean, random=False)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # PLOT 11: Multivariat – Scatter GDP × Happiness × Kontinent (Bubble)
