@@ -251,9 +251,9 @@ ax = axes[0]
 ax.scatter(y_pred, residuen, alpha=0.6, color='steelblue')
 ax.axhline(0, color='red', linestyle='--', linewidth=2)
 ax.set_title('Residualplot', fontweight='bold')
-ax.set_xlabel('Vorhergesagte Werte (ŷ)')
+ax.set_xlabel('Vorhergesagter Happiness Score (ŷ)')
 ax.set_ylabel('Residuen (y - ŷ)')
-ax.text(0.05, 0.95, f'R² = {r_value**2:.3f}\np = {p_value:.4f}',
+ax.text(0.05, 0.95, f'R² = {r_value**2:.3f}',
         transform=ax.transAxes, verticalalignment='top',
         bbox=dict(boxstyle='round', alpha=0.3))
 ax.spines['top'].set_visible(False)
@@ -263,6 +263,8 @@ ax.spines['right'].set_visible(False)
 ax = axes[1]
 probplot(residuen, dist="norm", plot=ax)
 ax.set_title('QQ-Plot der Residuen', fontweight='bold')
+ax.set_xlabel('Theoretische Quantile (Normalverteilung)')
+ax.set_ylabel('Sample Quantile')
 ax.get_lines()[0].set(color='steelblue', alpha=0.6)
 ax.get_lines()[1].set(color='red', linewidth=2)
 ax.spines['top'].set_visible(False)
