@@ -133,7 +133,7 @@ for land in alle_laender:
             linewidth=linewidth,
             linestyle=linestyle)
 
-ax.set_title('Happiness Score der Top 10 Länder (2025)\n+ Deutschland & Afghanistan', fontweight='bold')
+ax.set_title('Happiness Score der Top 10 Länder (2025)', fontweight='bold')
 ax.set_xlabel('Jahr')
 ax.set_ylabel('Happiness Score')
 ax.legend(fontsize=7, ncol=2, loc='lower left')
@@ -161,23 +161,27 @@ plt.show()
 # PLOT 4-9: Korrelationen mit Residualplot
 # ═══════════════════════════════════════════════════════════════════════════════
 def plot_correlation(ax, df, y_column, y_label):
-    subset = df[df['year'] == 2025][['happiness_score', y_column]].dropna()
+    subset = df[df['year'] == 2025][['happiness_score', y_column, 'country']].dropna()
+
     x = subset['happiness_score']
     y = subset[y_column]
-    correlation = x.corr(y)
-    r_squared = correlation**2
-    slope, intercept, r_value, p_value, std_err = linregress(x, y)
+    r_value = x.corr(y)
+    r_squared = r_value**2
+    slope, intercept, _, _, _ = linregress(x, y)
     x_line = np.linspace(x.min(), x.max(), 100)
     y_line = slope * x_line + intercept
-    ax.scatter(x, y, alpha=0.6)
-    ax.plot(x_line, y_line, color='red', linewidth=2, label='Regression')
-    ax.set_title(f'Happiness Score vs. {y_label} (2025)', fontweight='bold')
+    color = 'red' if abs(r_value) > 0.6 else 'gray'
+    ax.scatter(x, y, alpha=0.6, color=color)
+    ax.plot(x_line, y_line, color='black', linewidth=2, label='Regression')
+    ax.set_title(f'Happiness vs. {y_label}', fontweight='bold')
     ax.set_xlabel('Happiness Score')
-    ax.set_ylabel(y_label)
-    ax.legend()
-    ax.text(0.05, 0.95, f'r = {r_value:.2f}\nR² = {r_squared:.2f}',
-            transform=ax.transAxes, verticalalignment='top',
+    ax.set_ylabel(f'{y_label} (contribution)')
+    ax.text(0.05, 0.95,
+            f'r = {r_value:.2f}\nR² = {r_squared:.2f}',
+            transform=ax.transAxes,
+            verticalalignment='top',
             bbox=dict(boxstyle='round', alpha=0.3))
+
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
 
@@ -185,11 +189,11 @@ fig, axes = plt.subplots(2, 3, figsize=(18, 10))
 fig.suptitle('World Happiness Report – Korrelationen (2025)', fontsize=14, fontweight='bold')
 
 plot_correlation(axes[0][0], df, 'explained_social_support', 'Social Support')
-plot_correlation(axes[0][1], df, 'explained_healthy_life_expectancy', 'Healthy Life Expectancy')
-plot_correlation(axes[0][2], df, 'explained_freedom', 'Freedom')
-plot_correlation(axes[1][0], df, 'explained_log_gdp_per_capita', 'Log GDP per Capita')
-plot_correlation(axes[1][1], df, 'explained_generosity', 'Generosity')
-plot_correlation(axes[1][2], df, 'explained_corruption', 'Corruption')
+plot_correlation(axes[0][1], df, 'explained_log_gdp_per_capita', 'Log GDP per Capita')
+plot_correlation(axes[0][2], df, 'explained_healthy_life_expectancy', 'Healthy Life Expectancy')
+plot_correlation(axes[1][0], df, 'explained_freedom', 'Freedom')
+plot_correlation(axes[1][1], df, 'explained_corruption', 'Corruption')
+plot_correlation(axes[1][2], df, 'explained_generosity', 'Generosity')
 
 plt.tight_layout()
 plt.savefig(BASE_DIR / 'plot2_korrelationen.png', dpi=150, bbox_inches='tight')
@@ -285,9 +289,16 @@ faktoren = {
     'happiness_score': 'Happiness'
 }
 
+
 corr_df = df[df['year'] == 2025][list(faktoren.keys())].dropna()
 corr_df.columns = list(faktoren.values())
 corr_matrix = corr_df.corr()
+mask = np.abs(corr_matrix) < 0.3
+corr_matrix_masked = corr_matrix.copy()
+corr_matrix_masked[mask] = np.nan
+
+order = ['Happiness', 'GDP', 'Social Support', 'Life Expectancy', 'Freedom', 'Corruption', 'Generosity']
+corr_matrix = corr_matrix.loc[order, order]
 
 im = ax.imshow(corr_matrix, cmap='RdYlGn', vmin=-1, vmax=1)
 plt.colorbar(im, ax=ax, label='Pearson r')
