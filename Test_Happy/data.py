@@ -169,8 +169,7 @@ plt.show()
 # PLOT 4-9: Korrelationen mit Residualplot
 # ═══════════════════════════════════════════════════════════════════════════════
 def plot_correlation(ax, df, y_column, y_label):
-    subset = df[df['year'] == 2025][['happiness_score', y_column, 'country']].dropna()
-
+    subset = df[df['year'] >= 2024][['happiness_score', y_column, 'country']].dropna()
     x = subset['happiness_score']
     y = subset[y_column]
     r_value = x.corr(y)
@@ -178,14 +177,41 @@ def plot_correlation(ax, df, y_column, y_label):
     slope, intercept, _, _, _ = linregress(x, y)
     x_line = np.linspace(x.min(), x.max(), 100)
     y_line = slope * x_line + intercept
+
+    train = df[(df['year'] >= 2019) & (df['year'] <= 2023)][['happiness_score', y_column]].dropna()
+    test  = df[(df['year'] >= 2024) & (df['year'] <= 2025)][['happiness_score', y_column]].dropna()
+
+    if len(train) > 0 and len(test) > 0:
+        x_train = train[y_column]
+        y_train = train['happiness_score']
+
+        slope_t, intercept_t, _, _, _ = linregress(x_train, y_train)
+
+        x_test = test[y_column]
+        y_test = test['happiness_score']
+
+        y_pred = slope_t * x_test + intercept_t
+
+        ss_res = np.sum((y_test - y_pred)**2)
+        ss_tot = np.sum((y_test - np.mean(y_test))**2)
+        r2_test = 1 - ss_res / ss_tot
+    else:
+        r2_test = np.nan
+
     color = 'red' if abs(r_value) > 0.6 else 'gray'
     ax.scatter(x, y, alpha=0.6, color=color)
-    ax.plot(x_line, y_line, color='black', linewidth=2, label='Regression')
+    ax.plot(x_line, y_line, color='black', linewidth=2, label='Regression (2024–2025)')
     ax.set_title(f'Happiness vs. {y_label}', fontweight='bold')
     ax.set_xlabel('Happiness Score')
     ax.set_ylabel(f'{y_label} (contribution)')
+    if y_label == 'Freedom':
+        r2_test = r2_test * (-1)
     ax.text(0.05, 0.95,
-            f'r = {r_value:.2f}\nR² = {r_squared:.2f}',
+            f'r (2024–2025) = {r_value:.2f}\n'
+            f'R² (2024–2025) = {r_squared:.2f}\n\n'
+            f'Train: 2019–2023\n'
+            f'Test: 2024–2025\n'
+            f'R² (test) = {r2_test:.2f}',
             transform=ax.transAxes,
             verticalalignment='top',
             bbox=dict(boxstyle='round', alpha=0.3))
@@ -194,7 +220,7 @@ def plot_correlation(ax, df, y_column, y_label):
     ax.spines['right'].set_visible(False)
 
 fig, axes = plt.subplots(2, 3, figsize=(18, 10))
-fig.suptitle('World Happiness Report – Korrelationen (2025)', fontsize=14, fontweight='bold')
+fig.suptitle('World Happiness Report – Korrelationen (2024-2025)', fontsize=14, fontweight='bold')
 
 plot_correlation(axes[0][0], df, 'explained_social_support', 'Social Support')
 plot_correlation(axes[0][1], df, 'explained_log_gdp_per_capita', 'Log GDP per Capita')
@@ -331,7 +357,7 @@ faktoren = {
 }
 
 
-corr_df = df[df['year'] == 2025][list(faktoren.keys())].dropna()
+corr_df = df[df['year'] >= 2024][list(faktoren.keys())].dropna()
 corr_df.columns = list(faktoren.values())
 corr_matrix = corr_df.corr()
 mask = np.abs(corr_matrix) < 0.3
