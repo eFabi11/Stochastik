@@ -250,14 +250,37 @@ plt.show()
 # PLOT 11: Multivariat – Scatter GDP × Happiness × Kontinent (Bubble)
 # ═══════════════════════════════════════════════════════════════════════════════
 fig, ax = plt.subplots(figsize=(12, 8))
-fig.suptitle('Multivariat: GDP × Happiness × Life Expectancy (2025)',
-             fontsize=14, fontweight='bold')
 
-df_2025 = df[df['year'] == 2025].dropna(
-    subset=['explained_log_gdp_per_capita', 'happiness_score',
-            'explained_healthy_life_expectancy'])
+fig.suptitle(
+    'Multivariat: Durchschnitt GDP × Happiness × Life Expectancy (2019–2025)',
+    fontsize=14,
+    fontweight='bold'
+)
 
-for kontinent, gruppe in df_2025.groupby('kontinent'):
+# Zeitraum filtern
+df_avg = df[
+    (df['year'] >= 2019) & (df['year'] <= 2025)
+].dropna(
+    subset=[
+        'explained_log_gdp_per_capita',
+        'happiness_score',
+        'explained_healthy_life_expectancy'
+    ]
+)
+
+# Mittelwerte pro Land berechnen
+df_avg = (
+    df_avg
+    .groupby(['country', 'kontinent'], as_index=False)
+    .agg({
+        'explained_log_gdp_per_capita': 'mean',
+        'happiness_score': 'mean',
+        'explained_healthy_life_expectancy': 'mean'
+    })
+)
+
+# Plot
+for kontinent, gruppe in df_avg.groupby('kontinent'):
     ax.scatter(
         gruppe['explained_log_gdp_per_capita'],
         gruppe['happiness_score'],
@@ -265,19 +288,29 @@ for kontinent, gruppe in df_2025.groupby('kontinent'):
         color=FARBEN.get(kontinent, 'gray'),
         alpha=0.6,
         label=kontinent,
-        edgecolors='white', linewidth=0.5
+        edgecolors='white',
+        linewidth=0.5
     )
 
-ax.set_xlabel('Log GDP per Capita', fontsize=11)
-ax.set_ylabel('Happiness Score', fontsize=11)
-ax.set_title('Punktgröße = Life Expectancy', fontsize=10, style='italic')
+ax.set_xlabel('Durchschnitt Log GDP per Capita', fontsize=11)
+ax.set_ylabel('Durchschnitt Happiness Score', fontsize=11)
+ax.set_title('Punktgröße = Durchschnitt Life Expectancy', fontsize=10, style='italic')
+
 ax.legend(title='Kontinent', bbox_to_anchor=(1.01, 1), loc='upper left')
+
 ax.grid(linestyle='--', alpha=0.3)
+
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 
 plt.tight_layout()
-plt.savefig(BASE_DIR / 'plot4_multivariat_bubble.png', dpi=150, bbox_inches='tight')
+
+plt.savefig(
+    BASE_DIR / 'plot4_multivariat_bubble_avg_2019_2025.png',
+    dpi=150,
+    bbox_inches='tight'
+)
+
 plt.show()
 
 # ═══════════════════════════════════════════════════════════════════════════════
