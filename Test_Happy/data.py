@@ -203,8 +203,8 @@ def plot_correlation(ax, df, y_column, y_label):
     ax.plot(x_line, y_line, color='black', linewidth=2, label='Regression (2024–2025)')
     ax.set_title(f'Happiness vs. {y_label}', fontweight='bold')
     ax.set_xlabel('Happiness Score')
-    ax.set_ylabel(f'{y_label} (contribution)')
-    if y_label == 'Freedom':
+    ax.set_ylabel(f'{y_label}')
+    if y_label == 'Freiheit':
         r2_test = r2_test * (-1)
     ax.text(0.05, 0.95,
             f'r (2024–2025) = {r_value:.2f}\n'
@@ -222,12 +222,12 @@ def plot_correlation(ax, df, y_column, y_label):
 fig, axes = plt.subplots(2, 3, figsize=(18, 10))
 fig.suptitle('World Happiness Report – Korrelationen (2024-2025)', fontsize=14, fontweight='bold')
 
-plot_correlation(axes[0][0], df, 'explained_social_support', 'Social Support')
-plot_correlation(axes[0][1], df, 'explained_log_gdp_per_capita', 'Log GDP per Capita')
-plot_correlation(axes[0][2], df, 'explained_healthy_life_expectancy', 'Healthy Life Expectancy')
-plot_correlation(axes[1][0], df, 'explained_freedom', 'Freedom')
-plot_correlation(axes[1][1], df, 'explained_corruption', 'Corruption')
-plot_correlation(axes[1][2], df, 'explained_generosity', 'Generosity')
+plot_correlation(axes[0][0], df, 'explained_social_support', 'Soziale Unterstützung')
+plot_correlation(axes[0][1], df, 'explained_log_gdp_per_capita', 'logarithmiertes BIP pro Kopf')
+plot_correlation(axes[0][2], df, 'explained_healthy_life_expectancy', 'Gesunde Lebenserwartung')
+plot_correlation(axes[1][0], df, 'explained_freedom', 'Freiheit')
+plot_correlation(axes[1][1], df, 'explained_corruption', 'Korruption')
+plot_correlation(axes[1][2], df, 'explained_generosity', 'Generosität')
 
 plt.tight_layout()
 plt.savefig(BASE_DIR / 'plot2_korrelationen.png', dpi=150, bbox_inches='tight')
@@ -343,7 +343,7 @@ plt.show()
 # PLOT 12: Heatmap Korrelationsmatrix
 # ═══════════════════════════════════════════════════════════════════════════════
 fig, ax = plt.subplots(figsize=(10, 8))
-fig.suptitle('Korrelationsmatrix aller Faktoren (2025)',
+fig.suptitle('Korrelationsmatrix aller Faktoren (2024-2025)',
              fontsize=14, fontweight='bold')
 
 faktoren = {
