@@ -258,7 +258,7 @@ plt.show()
 # PLOT 10: Residualplot + QQ-Plot (Modellvalidierung)
 # ═══════════════════════════════════════════════════════════════════════════════
 fig, axes = plt.subplots(1, 2, figsize=(14, 6))
-fig.suptitle('Modellvalidierung: Happiness ~ GDP (2025)', fontsize=14, fontweight='bold')
+fig.suptitle('Modellvalidierung: Happiness Score ~ Log. BIP pro Kopf (2025)', fontsize=14, fontweight='bold')
 
 subset = df_clean[df_clean['year'] == 2025][['happiness_score', 'explained_log_gdp_per_capita']].dropna()
 x = subset['explained_log_gdp_per_capita']
