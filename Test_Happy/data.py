@@ -10,6 +10,11 @@ BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "Data"
 
 df = pd.read_csv(DATA_DIR / "world_happiness.csv")
+df['country'] = (
+    df['country']
+    .str.strip()
+    .str.replace('’', "'", regex=False)
+)
 
 # ── Kontinente zuweisen ───────────────────────────────────────────────────────
 kontinent_map = {
@@ -41,7 +46,8 @@ kontinent_map = {
     'Guatemala': 'Mittelamerika', 'Honduras': 'Mittelamerika',
     'El Salvador': 'Mittelamerika', 'Nicaragua': 'Mittelamerika',
     'Jamaica': 'Mittelamerika', 'Trinidad and Tobago': 'Mittelamerika',
-    'Dominican Republic': 'Mittelamerika',
+    'Dominican Republic': 'Mittelamerika', 'Puerto Rico': 'Mittelamerika',
+    'Haiti': 'Mittelamerika', 'Cuba': 'Mittelamerika',
 
     'China': 'Asien', 'Japan': 'Asien', 'Republic of Korea': 'Asien',
     'Singapore': 'Asien', 'Taiwan Province of China': 'Asien',
@@ -60,6 +66,8 @@ kontinent_map = {
     'Oman': 'Asien', 'Turkey': 'Asien', 'Türkiye': 'Asien',
     'North Cyprus': 'Asien', 'Cyprus': 'Europa',
     'State of Palestine': 'Asien', 'Yemen': 'Asien', 'Syria': 'Asien',
+    'Bhutan': 'Asien', 'Maldives': 'Asien',
+    
 
     'Nigeria': 'Afrika', 'Ethiopia': 'Afrika', 'Ghana': 'Afrika',
     'Kenya': 'Afrika', 'Tanzania': 'Afrika', 'Uganda': 'Afrika',
@@ -77,17 +85,17 @@ kontinent_map = {
     'Lesotho': 'Afrika', 'Eswatini': 'Afrika', 'Gabon': 'Afrika',
     'Mauritius': 'Afrika', 'Comoros': 'Afrika', 'Somalia': 'Afrika',
     'Gambia': 'Afrika', 'Djibouti': 'Afrika', 'Central African Republic': 'Afrika',
-    'Swaziland': 'Afrika',
+    'Swaziland': 'Afrika', 'Côte d’Ivoire': 'Afrika', 'Somaliland Region': 'Afrika',
 
     'Australia': 'Ozeanien', 'New Zealand': 'Ozeanien',
 }
 
-df['kontinent'] = df['country'].map(kontinent_map).fillna('Sonstige')
+df['kontinent'] = df['country'].map(kontinent_map).dropna()
 
 FARBEN = {
     'Europa': 'steelblue', 'Nordamerika': 'orange', 'Südamerika': 'green',
     'Mittelamerika': 'limegreen', 'Asien': 'red', 'Afrika': 'purple',
-    'Ozeanien': 'brown', 'Sonstige': 'gray'
+    'Ozeanien': 'brown'
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
