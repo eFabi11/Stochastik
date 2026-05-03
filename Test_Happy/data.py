@@ -165,6 +165,27 @@ plt.tight_layout()
 plt.savefig(BASE_DIR / 'plot1_uebersicht.png', dpi=150, bbox_inches='tight')
 plt.show()
 
+# ===========================================================================
+# Remove rows that contain 0.0 as value, which indicates missing values
+# ===========================================================================
+cols = [
+    'happiness_score',
+    'explained_log_gdp_per_capita',
+    'explained_social_support',
+    'explained_healthy_life_expectancy',
+    'explained_freedom',
+    'explained_generosity',
+    'explained_corruption'
+]
+
+# Debug
+# df_problem = df[(df[cols] == 0).any(axis=1)]
+# print(df_problem)
+
+df_clean = df.copy()
+df_clean[cols] = df_clean[cols].replace(0, np.nan)
+df_clean = df_clean.dropna(subset=cols)
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # PLOT 4-9: Korrelationen mit Residualplot
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -222,12 +243,12 @@ def plot_correlation(ax, df, y_column, y_label):
 fig, axes = plt.subplots(2, 3, figsize=(18, 10))
 fig.suptitle('World Happiness Report – Korrelationen (2024-2025)', fontsize=14, fontweight='bold')
 
-plot_correlation(axes[0][0], df, 'explained_social_support', 'Soziale Unterstützung')
-plot_correlation(axes[0][1], df, 'explained_log_gdp_per_capita', 'logarithmiertes BIP pro Kopf')
-plot_correlation(axes[0][2], df, 'explained_healthy_life_expectancy', 'Gesunde Lebenserwartung')
-plot_correlation(axes[1][0], df, 'explained_freedom', 'Freiheit')
-plot_correlation(axes[1][1], df, 'explained_corruption', 'Korruption')
-plot_correlation(axes[1][2], df, 'explained_generosity', 'Generosität')
+plot_correlation(axes[0][0], df_clean, 'explained_social_support', 'Soziale Unterstützung')
+plot_correlation(axes[0][1], df_clean, 'explained_log_gdp_per_capita', 'logarithmiertes BIP pro Kopf')
+plot_correlation(axes[0][2], df_clean, 'explained_healthy_life_expectancy', 'Gesunde Lebenserwartung')
+plot_correlation(axes[1][0], df_clean, 'explained_freedom', 'Freiheit')
+plot_correlation(axes[1][1], df_clean, 'explained_corruption', 'Korruption')
+plot_correlation(axes[1][2], df_clean, 'explained_generosity', 'Generosität')
 
 plt.tight_layout()
 plt.savefig(BASE_DIR / 'plot2_korrelationen.png', dpi=150, bbox_inches='tight')
@@ -239,7 +260,7 @@ plt.show()
 fig, axes = plt.subplots(1, 2, figsize=(14, 6))
 fig.suptitle('Modellvalidierung: Happiness ~ GDP (2025)', fontsize=14, fontweight='bold')
 
-subset = df[df['year'] == 2025][['happiness_score', 'explained_log_gdp_per_capita']].dropna()
+subset = df_clean[df_clean['year'] == 2025][['happiness_score', 'explained_log_gdp_per_capita']].dropna()
 x = subset['explained_log_gdp_per_capita']
 y = subset['happiness_score']
 slope, intercept, r_value, p_value, std_err = linregress(x, y)
@@ -286,8 +307,8 @@ fig.suptitle(
 )
 
 # Zeitraum filtern
-df_avg = df[
-    (df['year'] >= 2019) & (df['year'] <= 2025)
+df_avg = df_clean[
+    (df_clean['year'] >= 2019) & (df_clean['year'] <= 2025)
 ].dropna(
     subset=[
         'explained_log_gdp_per_capita',
@@ -359,7 +380,7 @@ faktoren = {
 }
 
 
-corr_df = df[df['year'] >= 2024][list(faktoren.keys())].dropna()
+corr_df = df_clean[df_clean['year'] >= 2024][list(faktoren.keys())].dropna()
 corr_df.columns = list(faktoren.values())
 corr_matrix = corr_df.corr()
 mask = np.abs(corr_matrix) < 0.3
