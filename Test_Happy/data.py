@@ -278,7 +278,7 @@ plt.show()
 fig, ax = plt.subplots(figsize=(12, 8))
 
 fig.suptitle(
-    'Multivariat: Durchschnitt GDP × Happiness × Life Expectancy (2019–2025)',
+    'Multivariat: Log. BIP pro Kopf × Happiness Score × Lebenserwartung (2019–2025)',
     fontsize=14,
     fontweight='bold'
 )
@@ -318,9 +318,9 @@ for kontinent, gruppe in df_avg.groupby('kontinent'):
         linewidth=0.5
     )
 
-ax.set_xlabel('Durchschnitt Log GDP per Capita', fontsize=11)
-ax.set_ylabel('Durchschnitt Happiness Score', fontsize=11)
-ax.set_title('Punktgröße = Durchschnitt Life Expectancy', fontsize=10, style='italic')
+ax.set_xlabel('Ø Log. BIP pro Kopf', fontsize=11)
+ax.set_ylabel('Ø Happiness Score', fontsize=11)
+ax.set_title('Punktgröße = Ø Lebenserwartung', fontsize=10, style='italic')
 
 ax.legend(title='Kontinent', bbox_to_anchor=(1.01, 1), loc='upper left')
 
@@ -332,7 +332,7 @@ ax.spines['right'].set_visible(False)
 plt.tight_layout()
 
 plt.savefig(
-    BASE_DIR / 'plot4_multivariat_bubble_avg_2019_2025.png',
+    BASE_DIR / 'plot4_multivariat_bubble.png',
     dpi=150,
     bbox_inches='tight'
 )
